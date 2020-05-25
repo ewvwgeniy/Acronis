@@ -107,7 +107,6 @@ int main(int argc, char *argv[]) // 1- name of directory with files  2 - name of
         if (close(fd) == -1)
             perror("close");
     }
-    mp.has
 
     cout << "All time: " << ((double) (clock() - all_start))/CLOCKS_PER_SEC << " s\n";
     cout << "Search time: " << ((double) (clock() - search_start))/CLOCKS_PER_SEC << " s\n";
