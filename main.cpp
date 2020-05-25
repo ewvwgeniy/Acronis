@@ -5,7 +5,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <chrono>
 
 #define N 409
  // size of substring
