@@ -1,22 +1,23 @@
 #include <iostream>
-#include <stdio.h>
 #include <sys/mman.h>
-#include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <string>
+#include <chrono>
 
-#define N 5 // size of substring
+#define N 409
+ // size of substring
 
 using namespace std;
 
 int main(int argc, char *argv[]) // 1- name of directory with files  2 - name of file to search in
 {
+    clock_t all_start = clock();
     unordered_map <string, int> mp;
     int fd, n, i;
+    bool flag = false;
     void * mmf;
     DIR *dir;
     struct dirent *str;
@@ -48,9 +49,7 @@ int main(int argc, char *argv[]) // 1- name of directory with files  2 - name of
                                     for (i = 0; i < statbuf.st_size - N + 1; i++) {
                                         snprintf(buf, N + 1, "%s", mmf + i);
                                         string sub_str = buf;
-                                        if(mp.find(sub_str) != mp.end())
-                                            mp[sub_str] = 2;
-                                        else
+                                        if(mp.find(sub_str) == mp.end())
                                             mp[sub_str] = 1;
                                     }
 
@@ -75,16 +74,42 @@ int main(int argc, char *argv[]) // 1- name of directory with files  2 - name of
 
     // poisk podstrok iz faila
 
-    int file_fd;
+    clock_t search_start = clock();
 
-
-    if ((file_fd = open(argv[2], O_RDONLY)) == -1)
+    if ((fd = open(argv[2], O_RDONLY)) == -1)
         perror("open");
     else {
+        if (fstat(fd, &statbuf) == -1)
+            perror("fstat");
+        else {
+            if ((mmf = mmap(0, statbuf.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED)
+                perror("mmap");
+            else {
+                if (statbuf.st_size >= N) {
+                    for (i = 0; i < statbuf.st_size - N + 1; i++) {
+                        snprintf(buf, N + 1, "%s", mmf + i);
+                        string sub_str = buf;
+                        if (mp.find(sub_str) != mp.end()) {
+                            cout << "Found!" << endl << sub_str << endl;
+                            flag = true;
+                            break;
+                        }
+                    }
+                }
+                if (flag == false)
+                    cout << "Not found :(" << endl;
 
+                if (munmap(mmf, statbuf.st_size) == -1)
+                    perror("munmap");
+            }
+        }
 
-        if (close(file_fd) == -1)
+        if (close(fd) == -1)
             perror("close");
     }
+    mp.has
+
+    cout << "All time: " << ((double) (clock() - all_start))/CLOCKS_PER_SEC << " s\n";
+    cout << "Search time: " << ((double) (clock() - search_start))/CLOCKS_PER_SEC << " s\n";
     return 0;
 }
